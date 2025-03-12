@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "calculator.h"
+#include "limits.h"
 
 // Optional but needs to be defined(runs BEFORE each test)
 void setUp(void) {
@@ -41,7 +42,7 @@ void test_subtract_positive_and_negative_numbers(void) {
  }
  
 void test_subtract_negative_numbers(void) {
-	TEST_ASSERT_EQUAL(1, subtract(-3, -4)); // Expect -3 - -4 = -7
+	TEST_ASSERT_EQUAL(1, subtract(-3, -4)); // Expect -3 - -4 = 1
 }
  
 void test_subtract_zero(void) {
@@ -81,26 +82,89 @@ void test_divide_negative_numbers(void) {
 void test_divide_by_zero(void) {
 	TEST_ASSERT_EQUAL(0, divide(5, 0));    // Define behavior for division by zero
 }
+
+// Test integer overflow
+void test_add_overflow(void) {
+	int result = add(INT_MAX, 1); // Should wrap around or cause undefined behavior
+	TEST_ASSERT_TRUE(result < 0); // This checks if overflow occurred
+}
  
+// Test integer underflow
+void test_add_underflow(void) {
+	int result = add(INT_MIN, -1);
+	TEST_ASSERT_TRUE(result > 0); // This checks if underflow occurred
+}
+ 
+// Test integer overflow in subtraction
+void test_subtract_overflow(void) {
+	int result = subtract(INT_MAX, -1); // MAX - (-1) = MAX + 1 should overflow
+	TEST_ASSERT_TRUE(result < 0); // This checks if overflow occurred
+}
+ 
+// Test integer underflow in subtraction
+void test_subtract_underflow(void) {
+	int result = subtract(INT_MIN, 1); // MIN - 1 should underflow
+	TEST_ASSERT_TRUE(result > 0); // This checks if underflow occurred
+}
+ 
+// Test integer overflow in multiplication
+void test_multiply_overflow(void) {
+	int result = multiply(INT_MAX, 2); // Should overflow
+	TEST_ASSERT_TRUE(result < 0); // This checks if overflow occurred
+}
+ 
+// Test integer underflow in multiplication
+void test_multiply_underflow(void) {
+	int result = multiply(INT_MIN, 2); // Will overflow in most implementations
+	// The result is typically 0 or a negative number, not positive
+	TEST_ASSERT_TRUE(result <= 0); // Adjusted expectation
+}
+ 
+// Test integer overflow in division
+void test_divide_overflow(void) {
+	// Only INT_MIN / -1 can overflow on two's complement machines
+	int result = divide(INT_MIN, -1);
+	TEST_ASSERT_TRUE(result <= 0); // Either overflow or implementation-defined
+}
+ 
+// Test integer underflow in division
+void test_divide_underflow(void) {
+	// Division doesn't typically underflow, but we can test edge cases
+	int result = divide(INT_MIN, 1);
+	TEST_ASSERT_EQUAL(INT_MIN, result); // Should remain INT_MIN
+}
  
 int main(void) {
 	UNITY_BEGIN();
+
 	RUN_TEST(test_add_positive_numbers);
 	RUN_TEST(test_add_positive_and_negative_numbers);
 	RUN_TEST(test_add_negative_numbers);
 	RUN_TEST(test_add_zero);
-	RUN_TEST(test_multiply_positive_numbers);
-	RUN_TEST(test_multiply_positive_and_negative_numbers);
-	RUN_TEST(test_multiply_negative_numbers);
-	RUN_TEST(test_multiply_zero);
+	RUN_TEST(test_add_overflow);
+	RUN_TEST(test_add_underflow);
+
 	RUN_TEST(test_subtract_positive_numbers);
 	RUN_TEST(test_subtract_positive_and_negative_numbers);
 	RUN_TEST(test_subtract_negative_numbers);
 	RUN_TEST(test_subtract_zero);
+	RUN_TEST(test_subtract_overflow);
+	RUN_TEST(test_subtract_underflow);
+
+	RUN_TEST(test_multiply_positive_numbers);
+	RUN_TEST(test_multiply_positive_and_negative_numbers);
+	RUN_TEST(test_multiply_negative_numbers);
+	RUN_TEST(test_multiply_zero);
+	RUN_TEST(test_multiply_overflow);
+	RUN_TEST(test_multiply_underflow);
+
 	RUN_TEST(test_divide_positive_numbers);
 	RUN_TEST(test_divide_positive_and_negative_numbers);
 	RUN_TEST(test_divide_negative_numbers);
 	RUN_TEST(test_divide_by_zero);
+	RUN_TEST(test_divide_overflow);
+	RUN_TEST(test_divide_underflow);
+
 	return UNITY_END();
 }
  
